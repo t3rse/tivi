@@ -72,10 +72,6 @@
 -keepattributes *Annotation*
 -renamesourcefileattribute SourceFile
 
-# Fabric/Crashlytics
--keep class com.crashlytics.** { *; }
--dontwarn com.crashlytics.**
-
 # Dagger
 -dontwarn com.google.errorprone.annotations.*
 
@@ -88,21 +84,33 @@
 # Okhttp + Okio
 -dontwarn okhttp3.**
 -dontwarn okio.**
+# JSR 305 annotations are for embedding nullability information.
 -dontwarn javax.annotation.**
+# OkHttp platform used only on JVM and when Conscrypt dependency is available.
+-dontwarn okhttp3.internal.platform.ConscryptPlatform
+# Animal Sniffer compileOnly dependency to ensure APIs are compatible with older versions of Java.
+-dontwarn org.codehaus.mojo.animal_sniffer.*
 # A resource is loaded with a relative path so the package of this class must be preserved.
 -keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
 
+# GSON
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
 # Keep Trakt-java Entity names (for GSON)
--keepnames class com.uwetrottmann.trakt5.enums.** { *; }
--keepnames class com.uwetrottmann.trakt5.entities.** { *; }
+-keepclassmembers class com.uwetrottmann.trakt5.enums.** { *; }
+-keepclassmembers class com.uwetrottmann.trakt5.entities.** { *; }
 
 # Keep TMDb Entity names (for GSON)
--keepnames class com.uwetrottmann.tmdb2.enumerations.** { *; }
--keepnames class com.uwetrottmann.tmdb2.entities.** { *; }
+-keepclassmembers class com.uwetrottmann.tmdb2.enumerations.** { *; }
+-keepclassmembers class com.uwetrottmann.tmdb2.entities.** { *; }
 
 # Keep stuff for Room
--keep class app.tivi.data.TiviTypeConverters { *; }
--keep class app.tivi.data.entities.** { *; }
+-keepclassmembers class * {
+    @android.arch.persistence.room.TypeConverter <methods>;
+}
+-keepclassmembers class app.tivi.data.entities.** { *; }
 
 # Glide
 -keep public class * implements com.bumptech.glide.module.GlideModule
@@ -116,6 +124,10 @@
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
+# Kotlin Metadata
+-keep class kotlin.Metadata { *; }
+# kotlin-reflect
+-keep public class kotlin.reflect.jvm.internal.impl.builtins.* { public *; }
 
 # BaseMvRxViewModels loads the Companion class via reflection and thus we need to make sure we keep
 # the name of the Companion object.
@@ -131,6 +143,11 @@
     public <init>(...);
     public static *** create(...);
 }
+
+# Stop R8 converting these classes to abstract
+-keep class * implements com.airbnb.mvrx.MvRxState { *; }
+# Keep the marker interface
+-keep class com.airbnb.mvrx.MvRxState
 
 # Retrofit does reflection on generic parameters and InnerClass is required to use Signature.
 -keepattributes Signature, InnerClasses
